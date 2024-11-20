@@ -5,25 +5,14 @@ import './App.css';
 import Playback from './playback/playback';
 import Record from './record/record';
 
-import { useState } from 'react';
-import { useHotkeys } from 'react-hotkeys-hook';
-
-const keyMap = {
-    RECORD: "q",
-    STOP: "w",
-    PLAY: "e",
-    PAUSE: "r",
-};
+const keyMap = new Map<string, string>([
+  ["r", "record"],
+  ["s", "stop"],
+  ["p", "play"],
+  ["q", "pause"],
+]);
 
 function App() {
-  const [key, setKey] = useState("");
-  useHotkeys(Object.values(keyMap), (e) => {
-    setKey(e.key);
-    console.log(e.key);
-  }, 
-  {
-    keyup:true
-  });
 
   return (
     <div className="App">
@@ -33,7 +22,7 @@ function App() {
           Edit <code>src/App.tsx</code> and save to reload.
         </p>
         <Playback/>
-        <Record keyPressed={key}/>
+        <Record/>
       </header>
     </div>
   );
