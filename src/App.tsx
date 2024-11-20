@@ -1,28 +1,21 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import "./App.css";
 
-import Playback from './playback/playback';
-import Record from './record/record';
+import Playback from "./playback/playback";
+import Record from "./record/record";
 
-const keyMap = new Map<string, string>([
-  ["r", "record"],
-  ["s", "stop"],
-  ["p", "play"],
-  ["q", "pause"],
+const locationMap = new Map<string, string>([
+  ["1", "Area 1"],
+  ["2", "Area 2"],
+  ["3", "Area 3"],
 ]);
 
 function App() {
-
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <Playback/>
-        <Record/>
+        <Playback />
+        <Record locationMap={locationMap} />
       </header>
     </div>
   );
