@@ -17,8 +17,7 @@ export default function Record({
   locationMap.forEach((value, key) => keyMap.set(key, value));
 
   const [key, setKey] = useState("");
-  const [locations, setLocations] = useState<Array<[number, string]>>([]); // location button presses to encode later
-  const [time, setTime] = useState(0); // to create timestamps for locations
+  const [location, setLocation] = useState<string | undefined>(undefined); // location button presses to encode later
 
   const recorderRef = useRef(new MediaRecorder(webcamStream));
 
@@ -39,8 +38,9 @@ export default function Record({
   }
 
   function sendRecording() {
+    if (!location) throw new Error("Invalid Location")
     const formData = new FormData();
-    formData.append("example", "hello");
+    formData.append("location", location);
     console.log(blob);
     if (blob) formData.append("file", blob, "recorded_video.webm");
     axios
@@ -62,6 +62,7 @@ export default function Record({
   useHotkeys(
     Array.from(keyMap.keys()),
     (e) => {
+      e.preventDefault();
       const t = keyMap.get(e.key);
       if (t !== undefined) {
         setKey(t);
@@ -74,13 +75,11 @@ export default function Record({
 
   if (key === "record" && recorderRef.current.state === "inactive") {
     startRecording();
-    setTime(Date.now());
-    setLocations([]);
+    setLocation(undefined);
   } else if (key === "stop" && recorderRef.current.state === "recording") {
     recorderRef.current.stop();
-  } else if (Array.from(locationMap.values()).includes(key)) {
-    const newEntry: [[number, string]] = [[Date.now() - time, key]];
-    setLocations(locations.concat(newEntry));
+  } else if (Array.from(locationMap.values()).includes(key) && !location) {
+    setLocation(key);
   }
 
   useEffect(() => {
