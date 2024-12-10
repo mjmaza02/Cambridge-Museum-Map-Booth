@@ -1,19 +1,20 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-export default function Playback({
-  location,
-}: {
-  location: string;
-}) {
-
+export default function Playback({ location }: { location: string }) {
+  const [streamSource, setSource] = useState<string>("")
   useEffect(() => {
     async function setStream() {
-      const p = await axios
-        .get("http://localhost:8080/play", {params: {location}})
-        .then((res) => res.headers)
+      await axios
+        .get("http://localhost:8080/play", { params: { location } })
+        .then((res) => {
+          const URL = window.URL || window.webkitURL;
+          const url = URL.createObjectURL(
+            new Blob([res.data], { type: "video/mp4" })
+          );
+          setSource(url);
+        })
         .catch((e) => console.error(e));
-      console.log(p);
     }
     if (location) setStream();
   }, [location]);
@@ -22,9 +23,8 @@ export default function Playback({
     <div>
       <h1>PLAYBACK TODO</h1>
       {location && <h2>{location}</h2>}
-      {location && (
-        <video src="http://localhost:8080/play" controls autoPlay></video>
-      )}
+      {location && <video controls autoPlay src={streamSource}></video>}
+      {!location && <p>Set location to start</p>}
     </div>
   );
 }

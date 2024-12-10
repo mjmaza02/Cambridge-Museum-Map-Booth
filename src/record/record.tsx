@@ -13,11 +13,8 @@ export default function Record({
   webcamStream: MediaStream;
 }) {
   // Create full control map
-  const keyMap = new Map(controlMap.entries());
-  locationMap.forEach((value, key) => keyMap.set(key, value));
-
   const [key, setKey] = useState("");
-  const [location, setLocation] = useState<string | undefined>(undefined); // location button presses to encode later
+  const [location, setLocation] = useState("");
 
   const recorderRef = useRef(new MediaRecorder(webcamStream));
 
@@ -38,10 +35,8 @@ export default function Record({
   }
 
   function sendRecording() {
-    if (!location) throw new Error("Invalid Location")
     const formData = new FormData();
     formData.append("location", location);
-    console.log(blob);
     if (blob) formData.append("file", blob, "recorded_video.webm");
     axios
       .post("http://localhost:8080/save", formData, {
@@ -56,30 +51,25 @@ export default function Record({
         console.error("Error uploading video:", error);
       });
     setBlob(undefined);
+    setLocation("");
   }
 
   // Parse keypress to command/location
-  useHotkeys(
-    Array.from(keyMap.keys()),
-    (e) => {
-      e.preventDefault();
-      const t = keyMap.get(e.key);
-      if (t !== undefined) {
-        setKey(t);
-      }
-    },
-    {
-      keyup: true,
+  useHotkeys("*", (event) => {
+    event.preventDefault();
+    const loc = locationMap.get(event.key);
+    const cont = controlMap.get(event.key);
+    if (loc) {
+      setLocation(loc);
+    } else if (cont) {
+      setKey(cont);
     }
-  );
+  });
 
-  if (key === "record" && recorderRef.current.state === "inactive") {
+  if (key === "record" && recorderRef.current.state === "inactive" && location) {
     startRecording();
-    setLocation(undefined);
   } else if (key === "stop" && recorderRef.current.state === "recording") {
     recorderRef.current.stop();
-  } else if (Array.from(locationMap.values()).includes(key) && !location) {
-    setLocation(key);
   }
 
   useEffect(() => {
@@ -90,7 +80,8 @@ export default function Record({
   return (
     <div className="App">
       <h1>RECORD</h1>
-      <p>STATUS: {recorderRef.current.state}</p>
+      {location && <p>STATUS: {recorderRef.current.state}</p>}
+      {!location && <p>Set location to start</p>}
       <video
         ref={(video) => {
           if (video) video.srcObject = webcamStream;

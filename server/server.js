@@ -12,7 +12,9 @@ const basePath = "./server/media";
 // Storage Engine to save files
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadDir = basePath;
+    const location = req.body.location;
+    const uploadDir = path.join(basePath, location);
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
     cb(null, uploadDir); // Save to the uploads directory
   },
   filename: function (req, file, cb) {
@@ -30,8 +32,9 @@ app.use(cors()); //to use cors requests
 app.use(express.json()); // to use json formating
 
 function getRandomFile(location) {
-  const files = fs.readFileSync(path.join(basePath, location));
-  // const files = fs.readdirSync(basePath);
+  const folderPath = path.join(basePath, location);
+  if (!fs.existsSync(folderPath)) throw Error("folder does not exist");
+  const files = fs.readdirSync(folderPath);
   const randInd = Math.floor(Math.random() * files.length);
   return files[randInd];
 }
@@ -42,10 +45,8 @@ app.get("/ping", (req, res) => {
 
 app.get("/play", (req, res) => {
   try {
-    const location = res.body.location
-    const file = getRandomFile(location);
-    const fPath = path.join(basePath, file);
-    console.log(fPath)
+    const file = getRandomFile(req.query.location);
+    const fPath = path.join(basePath, req.query.location, file);
 
     res.setHeader("Content-Type", "video/webm");
     const stream = fs.createReadStream(fPath);
@@ -53,8 +54,10 @@ app.get("/play", (req, res) => {
 
     stream.on("error", (_) => {
       res.status(500).send("Error streaming file");
+      console.error(_);
     });
   } catch (_) {
+    console.log(_);
     res.status(500).send("Error getting file");
   }
 });

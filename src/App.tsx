@@ -7,10 +7,10 @@ import { useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 
 const controlMap = new Map<string, string>([
-  ["r", "record"],
-  ["s", "stop"],
-  ["p", "play"],
-  ["l", "pause"],
+  ["0", "record"],
+  ["7", "stop"],
+  ["8", "play"],
+  ["9", "pause"],
 ]);
 
 const locationMap = new Map<string, string>([
@@ -37,7 +37,6 @@ function App() {
   useHotkeys("*", (event) => {
     event.preventDefault();
     const t = locationMap.get(event.key);
-    console.log(event.key)
     if (t) {
       setKey(t);
     }
