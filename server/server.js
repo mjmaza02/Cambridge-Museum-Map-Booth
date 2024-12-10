@@ -45,17 +45,21 @@ app.get("/ping", (req, res) => {
 
 app.get("/play", (req, res) => {
   try {
-    const file = getRandomFile(req.query.location);
-    const fPath = path.join(basePath, req.query.location, file);
+    const folderPath = path.join(basePath, req.query.location);
+    if (!fs.existsSync(folderPath)) res.status(404).send("No stories found");
+    else {
+      const file = getRandomFile(req.query.location);
+      const fPath = path.join(basePath, req.query.location, file);
 
-    res.setHeader("Content-Type", "video/webm");
-    const stream = fs.createReadStream(fPath);
-    stream.pipe(res);
+      res.setHeader("Content-Type", "video/webm");
+      const stream = fs.createReadStream(fPath);
+      stream.pipe(res);
 
-    stream.on("error", (_) => {
-      res.status(500).send("Error streaming file");
-      console.error(_);
-    });
+      stream.on("error", (_) => {
+        res.status(500).send("Error streaming file");
+        console.error(_);
+      });
+    }
   } catch (_) {
     console.log(_);
     res.status(500).send("Error getting file");

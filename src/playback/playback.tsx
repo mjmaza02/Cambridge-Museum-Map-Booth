@@ -6,15 +6,15 @@ export default function Playback({ location }: { location: string }) {
   useEffect(() => {
     async function setStream() {
       await axios
-        .get("http://localhost:8080/play", { params: { location } })
+        .get("http://localhost:8080/play", { params: { location }, responseType: 'blob' })
         .then((res) => {
           const URL = window.URL || window.webkitURL;
           const url = URL.createObjectURL(
-            new Blob([res.data], { type: "video/mp4" })
+            new Blob([res.data], { type: "video/webm" })
           );
           setSource(url);
         })
-        .catch((e) => console.error(e));
+        // .catch((e) => if(e.status===404) );
     }
     if (location) setStream();
   }, [location]);
@@ -23,7 +23,7 @@ export default function Playback({ location }: { location: string }) {
     <div>
       <h1>PLAYBACK TODO</h1>
       {location && <h2>{location}</h2>}
-      {location && <video controls autoPlay src={streamSource}></video>}
+      {location && <video autoPlay src={streamSource}></video>}
       {!location && <p>Set location to start</p>}
     </div>
   );

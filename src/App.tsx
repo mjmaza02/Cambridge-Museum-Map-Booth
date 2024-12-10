@@ -29,42 +29,63 @@ const locationMap = new Map<string, string>([
   ["Shift", "Area 13"],
 ]);
 
+const States = {
+  READY: "ready",
+  RECORD: "record",
+  PLAY: "play",
+};
+
 function App() {
   const [webcamStream, setStream] = useState<MediaStream>();
-  const [temp, setTemp] = useState<string | undefined>(undefined);
+  const [state, setState] = useState<string>(States.READY);
   const [keyPressed, setKey] = useState("");
 
   useHotkeys("*", (event) => {
     event.preventDefault();
-    const t = locationMap.get(event.key);
-    if (t) {
-      setKey(t);
+    const loc = locationMap.get(event.key);
+    const con = controlMap.get(event.key);
+    if (loc) {
+      setKey(loc);
+      setState(States.PLAY);
+    } else if (con) {
+      switch (con) {
+        case "stop":
+          setState(States.READY);
+          break;
+        case "record":
+          setState(States.RECORD);
+          break;
+        case "play":
+          setState(States.PLAY);
+          break;
+        default:
+          break;
+      }
     }
   });
 
-  if (temp === "record" && !webcamStream)
+  if (state === "record" && !webcamStream)
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
       .then((stream) => {
         if (!webcamStream) setStream(stream);
       });
-  else if (webcamStream && temp !== "record") {
+  else if (webcamStream && state !== "record") {
     webcamStream.getTracks().forEach((track) => track.stop());
     setStream(undefined);
   }
   return (
     <div className="App">
       <header className="App-header">
-        <button onClick={() => setTemp("record")}>Record</button>
-        <button onClick={() => setTemp("play")}>Play</button>
-        {temp === "play" && <Playback location={keyPressed} />}
-        {webcamStream && temp === "record" && (
+        {state === States.PLAY && <Playback location={keyPressed} />}
+        {webcamStream && state === States.RECORD && (
           <Record
             locationMap={locationMap}
             controlMap={controlMap}
             webcamStream={webcamStream}
           />
         )}
+        {state === States.READY && <p>Press record to start recording, or press a location to play a video from there!</p>}
       </header>
     </div>
   );
