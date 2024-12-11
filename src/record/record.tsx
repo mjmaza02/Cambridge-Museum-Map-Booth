@@ -7,10 +7,12 @@ export default function Record({
   locationMap,
   controlMap,
   webcamStream,
+  resetState,
 }: {
   locationMap: Map<string, string>;
   controlMap: Map<string, string>;
   webcamStream: MediaStream;
+  resetState: Function;
 }) {
   // Create full control map
   const [key, setKey] = useState("");
@@ -34,26 +36,6 @@ export default function Record({
     }
   }
 
-  function sendRecording() {
-    const formData = new FormData();
-    formData.append("location", location);
-    if (blob) formData.append("file", blob, "recorded_video.webm");
-    axios
-      .post("http://localhost:8080/save", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
-      .then((response) => {
-        console.log("Video uploaded successfully:", response.data);
-      })
-      .catch((error) => {
-        console.error("Error uploading video:", error);
-      });
-    setBlob(undefined);
-    setLocation("");
-  }
-
   // Parse keypress to command/location
   useHotkeys("*", (event) => {
     event.preventDefault();
@@ -66,15 +48,34 @@ export default function Record({
     }
   });
 
-  if (key === "record" && recorderRef.current.state === "inactive" && location) {
+  if (recorderRef.current.state === "inactive" && location) {
     startRecording();
   } else if (key === "stop" && recorderRef.current.state === "recording") {
     recorderRef.current.stop();
   }
 
   useEffect(() => {
-    if (blob) sendRecording();
-  }, [blob]);
+    if (blob) {
+      const formData = new FormData();
+      formData.append("location", location);
+      if (blob) formData.append("file", blob, "recorded_video.webm");
+      axios
+        .post("http://localhost:8080/save", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        })
+        .then((response) => {
+          console.log("Video uploaded successfully:", response.data);
+        })
+        .catch((error) => {
+          console.error("Error uploading video:", error);
+        });
+      setBlob(undefined);
+      setLocation("");
+      resetState();
+    };
+  }, [blob, resetState, location]);
 
   if (key) setKey(""); // to reset key after each press and avoid too many re-renders
   return (

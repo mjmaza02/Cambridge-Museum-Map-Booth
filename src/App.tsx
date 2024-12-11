@@ -44,10 +44,10 @@ function App() {
     event.preventDefault();
     const loc = locationMap.get(event.key);
     const con = controlMap.get(event.key);
-    if (loc) {
+    if (loc && state === States.READY) {
       setKey(loc);
       setState(States.PLAY);
-    } else if (con) {
+    } else if (con && state === States.READY) {
       switch (con) {
         case "stop":
           setState(States.READY);
@@ -77,15 +77,27 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        {state === States.PLAY && <Playback location={keyPressed} />}
+        {state === States.PLAY && (
+          <Playback
+            location={keyPressed}
+            controlMap={controlMap}
+            resetState={() => setState(States.READY)}
+          />
+        )}
         {webcamStream && state === States.RECORD && (
           <Record
             locationMap={locationMap}
             controlMap={controlMap}
             webcamStream={webcamStream}
+            resetState={() => setState(States.READY)}
           />
         )}
-        {state === States.READY && <p>Press record to start recording, or press a location to play a video from there!</p>}
+        {state === States.READY && (
+          <p>
+            Press record to start recording, or press a location to play a video
+            from there!
+          </p>
+        )}
       </header>
     </div>
   );
